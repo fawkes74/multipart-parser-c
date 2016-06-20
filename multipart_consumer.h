@@ -13,6 +13,7 @@ class MultipartConsumer
   QList<QMap<QByteArray,QByteArray>> headers_;
   QByteArray last_header_name;
   QList<QByteArray> parts_;
+  int currentUpload = 0;
 
 public:
     MultipartConsumer(const QByteArray& boundary)
@@ -32,7 +33,10 @@ public:
     }
 
     void exec(const QByteArray& body) {
-        multipart_parser_execute(m_parser, body.constData(), body.size());
+      currentUpload = 0;
+      headers_.clear();
+      parts_.clear();
+      multipart_parser_execute(m_parser, body.constData(), body.size());
     }
 
     const QList<QMap<QByteArray,QByteArray>>& headers() const {
@@ -59,8 +63,8 @@ private:
         if (me->last_header_name.size() > 0) {
           const auto value = QByteArray(at, length);
 
-          if (value.size() > 0) {
-            if (me->headers_.size() <= me->parts().size())
+          if (value.size() > 0) {            
+            if (me->headers().size() <= me->parts().size())
               me->headers_.append(QMap<QByteArray,QByteArray>());
             me->headers_[me->parts().size()].insert(me->last_header_name, value);
           }
@@ -74,7 +78,10 @@ private:
       MultipartConsumer* me = (MultipartConsumer*) multipart_parser_get_data(p);
 
       if (length > 0) {
-        me->parts_.append(QByteArray(at, length));
+        if (me->headers().size() > me->parts().size())
+          me->parts_.append(QByteArray(at, length));
+        else
+          me->parts_.last().append(QByteArray(at, length));
       }
 
       return 0;
