@@ -89,7 +89,6 @@ private:
 
     multipart_parser* m_parser;
     multipart_parser_settings m_callbacks;
-    int m_headers;
 };
 
 #endif // MULTIPARTCONSUMER_H
